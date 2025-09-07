@@ -1,0 +1,36 @@
+# ------------------------
+# System / OS files
+# ------------------------
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.log
+
+# Windows temporary files
+AppData/
+$RECYCLE.BIN/
+
+# ------------------------
+# IDE / editor files
+# ------------------------
+.vscode/
+*.code-workspace
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# ------------------------
+# Node / build / cache (if any)
+# ------------------------
+node_modules/
+dist/
+*.cache
+
+# ------------------------
+# Optional: backups or archives
+# ------------------------
+*.bak
+*.tmp
+*.swp

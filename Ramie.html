@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Alumni Birthday Hub — Full Prototype</title>
+<meta name="description" content="Alumni Birthday Hub with admin approval, alumni login, reminders, templates and light/dark theme."/>
+<style>
+:root{
+  --bg:#f4f7fb; --card:#ffffff; --muted:#6b7280; --accent:#0f766e; --accent-2:#06b6d4; --text:#0f172a;
+  --radius:14px; --max-width:1200px;
+}
+[data-theme="dark"]{
+  --bg:#071025; --card:#0f1b33; --muted:#9fb6c8; --accent:#22c5b7; --accent-2:#6ee7f5; --text:#e6edf6;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;background:linear-gradient(180deg,var(--bg),#eef6f9);color:var(--text);-webkit-font-smoothing:antialiased}
+.wrap{width:100%;max-width:var(--max-width);margin:24px auto;padding:20px}
+.header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{width:64px;height:64px;border-radius:16px;background:conic-gradient(from 140deg,var(--accent),var(--accent-2));display:grid;place-items:center;font-weight:800;color:#021;box-shadow:0 10px 30px rgba(0,0,0,.12)}
+.hmeta{line-height:1}
+.hmeta h1{margin:0;font-size:20px}
+.hmeta p{margin:2px 0 0 0;color:var(--muted);font-size:13px}
+.controls{display:flex;gap:8px;align-items:center}
+.btn{padding:10px 14px;border-radius:10px;background:var(--accent);color:#042;cursor:pointer;border:none;font-weight:700}
+.btn.ghost{background:transparent;border:1px solid rgba(0,0,0,0.06);color:var(--text)}
+.card{background:var(--card);border-radius:16px;padding:18px;box-shadow:0 8px 28px rgba(6,22,32,0.06);border:1px solid rgba(0,0,0,0.03)}
+.layout{display:grid;grid-template-columns:1.4fr .9fr;gap:18px}
+.col-left{display:flex;flex-direction:column;gap:14px}
+.col-right{display:flex;flex-direction:column;gap:14px}
+.section-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.small{font-size:13px;color:var(--muted)}
+.field{display:flex;flex-direction:column;margin-bottom:12px}
+label{font-size:13px;color:var(--muted);margin-bottom:6px}
+input,select,textarea{padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);background:transparent;color:var(--text)}
+textarea{min-height:100px;resize:vertical}
+.list{display:grid;gap:10px}
+.list-item{display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border:1px solid rgba(0,0,0,0.04)}
+.pill{padding:6px 10px;border-radius:999px;font-size:13px;background:rgba(6,118,110,0.08);color:var(--accent)}
+.centered{max-width:760px;margin:0 auto;display:grid;gap:12px}
+@media (max-width:980px){.layout{grid-template-columns:1fr}.controls{flex-wrap:wrap}}
+</style>
+</head>
+<body data-theme="light">
+<div class="wrap">
+  <div class="header">
+    <div class="brand">
+      <div class="logo">AH</div>
+      <div class="hmeta"><h1>Alumni Birthday Hub</h1><p class="small">Admin approval • Alumni login • Templates • Reminders</p></div>
+    </div>
+    <div class="controls">
+      <button id="themeToggle" class="btn ghost">Dark / Light</button>
+    </div>
+  </div>
+
+  <div class="layout" id="mainLayout">
+    <!-- LEFT -->
+    <div class="col-left" id="leftCol">
+      <!-- AUTH CARD (login/signup) -->
+      <div id="authCard" class="card centered"></div>
+
+      <!-- ADMIN DASHBOARD -->
+      <div id="adminDash" style="display:none">
+        <section class="card">
+          <div class="section-title"><h2>Pending approvals</h2><div class="small">Approve new alumni</div></div>
+          <div id="pendingList" class="list"></div>
+        </section>
+
+        <section class="card" style="margin-top:12px">
+          <div class="section-title"><h2>Manage templates</h2><div class="small">Add / remove message templates</div></div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+            <input id="newTemplate" placeholder="New template text" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06)">
+            <button id="addTemplateBtn" class="btn">Add</button>
+          </div>
+          <div id="templateList" class="list"></div>
+        </section>
+
+        <section class="card" style="margin-top:12px">
+          <div class="section-title"><h2>Upcoming birthdays (7 days)</h2><div class="small">Quick view</div></div>
+          <div id="adminUpcoming" class="list"></div>
+        </section>
+
+        <div style="margin-top:12px;display:flex;gap:8px"><button id="adminLogout" class="btn ghost">Logout</button></div>
+      </div>
+
+      <!-- ALUMNI DASHBOARD -->
+      <div id="alumniDash" style="display:none">
+        <section class="card">
+          <div class="section-title"><h2>Alumni Dashboard</h2><div class="small">Welcome back, <span id="alumniUserName"></span></div></div>
+
+          <div style="display:grid;grid-template-columns:1fr 300px;gap:12px">
+            <div>
+              <!-- Send wish -->
+              <div class="card" style="margin-bottom:12px">
+                <div class="section-title"><h3>Send a birthday wish</h3><div class="small">Pick a template or write your own</div></div>
+                <div class="field"><label for="wishRecipient">Recipient</label><select id="wishRecipient"></select></div>
+                <div class="field"><label for="wishTemplate">Template</label><select id="wishTemplate"></select></div>
+                <div class="field"><label for="wishMessage">Message</label><textarea id="wishMessage"></textarea></div>
+                <div style="display:flex;gap:8px"><button id="sendWishBtn" class="btn">Send wish</button><button id="clearWish" class="btn ghost">Clear</button></div>
+              </div>
+
+              <!-- Recent wishes -->
+              <div class="card">
+                <div class="section-title"><h3>Recent wishes</h3><div class="small" id="wishCount">0 sent</div></div>
+                <div id="recentWishes" class="list"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="card" style="margin-bottom:12px">
+                <div class="section-title"><h3>Upcoming birthdays</h3><div class="small">Next <select id="upcomingWindow"><option value="7">7</option><option value="14">14</option><option value="30">30</option></select> days</div></div>
+                <div id="upcomingList" class="list"></div>
+              </div>
+
+              <!-- Notifications -->
+              <div class="card">
+                <div class="section-title"><h3>Notifications</h3><div class="small">Reminders & alerts</div></div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <label><input type="checkbox" id="alertsEnabled" checked> Enable in-page alerts</label>
+                  <label><input type="checkbox" id="pushEnabled"> Enable browser push notifications</label>
+                  <div style="display:flex;gap:8px;align-items:center">
+                    <label class="small">Check every</label>
+                    <select id="intervalSelect"><option value="21600000" selected>6 hours</option><option value="10800000">3 hours</option><option value="3600000">1 hour</option></select>
+                    <button id="applyInterval" class="btn ghost">Apply</button>
+                  </div>
+                </div>
+                <div id="notifList" class="list" style="margin-top:10px"></div>
+                <button id="clearNotifs" class="btn ghost" style="margin-top:10px">Clear Notifications</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px;display:flex;gap:8px"><button id="alumniLogout" class="btn ghost">Logout</button></div>
+        </section>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="col-right">
+      <div class="card">
+        <div class="section-title"><h3>Quick stats</h3><div class="small" id="statSub">Local prototype</div></div>
+        <div style="display:grid;gap:8px">
+          <div class="list-item"><div><strong id="statTotal">0</strong><div class="small">Total alumni</div></div><div class="pill" id="statApproved">0 approved</div></div>
+          <div class="list-item"><div><strong id="statPending">0</strong><div class="small">Pending approvals</div></div><div class="pill">Reminders active</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title"><h3>Tips</h3></div>
+        <ul class="small">
+          <li>Admin approves signups before alumni can log in.</li>
+          <li>Enable push notifications for background reminders.</li>
+          <li>Data is stored locally in your browser (prototype).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- Storage helpers ---------- */
+const DB = {
+  get(k){ try{ return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+};
+if(!DB.get('alumni')) DB.set('alumni', []);
+if(!DB.get('templates')) DB.set('templates', [
+  "Wishing you a wonderful birthday filled with joy and success!",
+  "Happy Birthday! May your day be as bright as your smile.",
+  "Happy Birthday. Wishing you continued success and good health.",
+  "Another year wiser — or at least better at pretending! Happy Birthday!"
+]);
+
+/* ---------- Theme toggle ---------- */
+const themeToggle = document.getElementById('themeToggle');
+themeToggle.addEventListener('click', ()=>{ 
+  const cur = document.body.getAttribute('data-theme') || 'light';
+  document.body.setAttribute('data-theme', cur==='light'?'dark':'light');
+});
+
+/* ---------- Auth UI ---------- */
+const authCard = document.getElementById('authCard');
+function renderAuth(){
+  authCard.innerHTML = `
+    <div id="loginView">
+      <div class="section-title"><h2>Login</h2></div>
+      <div class="field"><label>Email</label><input id="loginEmail" type="email" ></div>
+      <div class="field"><label>Password</label><input id="loginPass" type="password" ></div>
+      <div style="display:flex;gap:8px"><button class="btn" id="loginBtn">Login</button><button class="btn ghost" id="showSignup">Sign up</button></div>
+    </div>
+    <div id="signupView" style="display:none">
+      <div class="section-title"><h2>Sign Up</h2></div>
+      <div class="field"><label>Full Name</label><input id="signupName"></div>
+      <div class="field"><label>Email</label><input id="signupEmail" type="email"></div>
+      <div class="field"><label>Password</label><input id="signupPass" type="password"></div>
+      <div class="field"><label>Date of Birth</label><input id="signupDOB" type="date"></div>
+      <div style="display:flex;gap:8px"><button class="btn" id="signupBtn">Sign Up</button><button class="btn ghost" id="showLogin">Back</button></div>
+    </div>
+  `;
+
+  document.getElementById('showSignup').addEventListener('click', ()=>{
+    document.getElementById('loginView').style.display='none';
+    document.getElementById('signupView').style.display='block';
+  });
+  document.getElementById('showLogin').addEventListener('click', ()=>{
+    document.getElementById('signupView').style.display='none';
+    document.getElementById('loginView').style.display='block';
+  });
+
+  document.getElementById('signupBtn').addEventListener('click', ()=>{
+    const name = document.getElementById('signupName').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const pass = document.getElementById('signupPass').value;
+    const dob = document.getElementById('signupDOB').value;
+    if(!name||!email||!pass||!dob){ alert("Please fill all fields"); return; }
+    let alumni = DB.get('alumni')||[];
+    if(alumni.find(a=>a.email===email)){ alert("Email already exists"); return; }
+    alumni.push({fullname:name,email,password:pass,dob:dob,approved:false,wishes:[]});
+    DB.set('alumni',alumni);
+    alert("Signup successful, waiting for admin approval");
+    renderAuth();
+  });
+
+  document.getElementById('loginBtn').addEventListener('click', ()=>{
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass = document.getElementById('loginPass').value;
+    // admin credentials
+    if(email==='admin@alumni.com' && pass==='admin123'){ showAdmin(); return; }
+    let alumni = DB.get('alumni')||[];
+    const user = alumni.find(a=>a.email===email && a.password===pass);
+    if(!user){ alert("Invalid credentials"); return; }
+    if(!user.approved){ alert("Waiting for admin approval"); return; }
+    showAlumni(user);
+  });
+}
+
+/* ---------- ADMIN DASHBOARD ---------- */
+const adminDash = document.getElementById('adminDash');
+function showAdmin(){
+  authCard.style.display='none';
+  adminDash.style.display='block';
+  alumniDash.style.display='none';
+  loadAdminDash();
+  refreshStats();
+}
+document.getElementById('adminLogout').addEventListener('click', ()=>{
+  adminDash.style.display='none';
+  authCard.style.display='block';
+  renderAuth();
+});
+
+/* ---------- ADMIN: pending approvals ---------- */
+function loadAdminDash(){
+  const pendingList = document.getElementById('pendingList');
+  pendingList.innerHTML='';
+  const alumni = DB.get('alumni')||[];
+  const pending = alumni.filter(a=>!a.approved);
+  pending.forEach(a=>{
+    const li = document.createElement('div');
+    li.className='list-item';
+    li.innerHTML = `<div>${a.fullname} (${a.email})</div><button class="btn smallBtn">Approve</button>`;
+    li.querySelector('button').addEventListener('click', ()=>{
+      const allAlumni = DB.get('alumni')||[];
+      const idx = allAlumni.findIndex(al=>al.email===a.email);
+      if(idx!==-1){
+        allAlumni[idx].approved = true;
+        DB.set('alumni',allAlumni);
+        loadAdminDash();
+        alert(`${allAlumni[idx].fullname} has been approved!`);
+        refreshStats();
+      }
+    });
+    pendingList.appendChild(li);
+  });
+
+  // Load templates
+  const templateList = document.getElementById('templateList');
+  templateList.innerHTML='';
+  const templates = DB.get('templates')||[];
+  templates.forEach((t,i)=>{
+    const li = document.createElement('div');
+    li.className='list-item';
+    li.innerHTML=`<div>${t}</div><button class="btn smallBtn">Delete</button>`;
+    li.querySelector('button').addEventListener('click', ()=>{
+      templates.splice(i,1);
+      DB.set('templates',templates);
+      loadAdminDash();
+    });
+    templateList.appendChild(li);
+  });
+
+  // Upcoming birthdays
+  const upcomingDiv = document.getElementById('adminUpcoming');
+  upcomingDiv.innerHTML='';
+  const today = new Date();
+  const nextWeek = new Date();
+  nextWeek.setDate(today.getDate()+7);
+  alumni.filter(a=>a.approved).forEach(a=>{
+    const bday = new Date(a.dob);
+    bday.setFullYear(today.getFullYear());
+    if(bday>=today && bday<=nextWeek){
+      const li = document.createElement('div');
+      li.className='list-item';
+      li.textContent=`${a.fullname} - ${bday.toDateString()}`;
+      upcomingDiv.appendChild(li);
+    }
+  });
+}
+document.getElementById('addTemplateBtn').addEventListener('click', ()=>{
+  const val = document.getElementById('newTemplate').value.trim();
+  if(!val) return;
+  const templates = DB.get('templates')||[];
+  templates.push(val);
+  DB.set('templates',templates);
+  document.getElementById('newTemplate').value='';
+  loadAdminDash();
+});
+
+/* ---------- ALUMNI DASHBOARD ---------- */
+const alumniDash = document.getElementById('alumniDash');
+let currentUser = null;
+function showAlumni(user){
+  currentUser = user;
+  authCard.style.display='none';
+  adminDash.style.display='none';
+  alumniDash.style.display='block';
+  document.getElementById('alumniUserName').textContent=user.fullname;
+  resetNotifications(); // clear notifications on login
+  refreshAlumni();
+  refreshStats();
+}
+document.getElementById('alumniLogout').addEventListener('click', ()=>{
+  alumniDash.style.display='none';
+  authCard.style.display='block';
+  renderAuth();
+  currentUser=null;
+});
+
+/* ---------- Alumni UI ---------- */
+function refreshAlumni(){
+  const alumni = DB.get('alumni')||[];
+  const approved = alumni.filter(a=>a.approved && a.email!==currentUser.email);
+  const wishRecipient = document.getElementById('wishRecipient');
+  wishRecipient.innerHTML='';
+  approved.forEach(a=>{
+    const opt = document.createElement('option');
+    opt.value=a.email; opt.textContent=a.fullname;
+    wishRecipient.appendChild(opt);
+  });
+  const templates = DB.get('templates')||[];
+  const wishTemplate = document.getElementById('wishTemplate');
+  wishTemplate.innerHTML='<option value="">--Choose template--</option>';
+  templates.forEach(t=>{
+    const opt = document.createElement('option');
+    opt.value=t; opt.textContent=t;
+    wishTemplate.appendChild(opt);
+  });
+  wishTemplate.addEventListener('change', ()=>{
+    document.getElementById('wishMessage').value = wishTemplate.value;
+  });
+  updateRecentWishes();
+  updateUpcoming();
+}
+
+function updateRecentWishes(){
+  const recentDiv = document.getElementById('recentWishes');
+  recentDiv.innerHTML='';
+  const alumni = DB.get('alumni')||[];
+  const me = alumni.find(a=>a.email===currentUser.email);
+  document.getElementById('wishCount').textContent = me.wishes.length+" sent";
+  me.wishes.slice(-5).reverse().forEach(w=>{
+    const li = document.createElement('div');
+    li.className='list-item';
+    li.innerHTML=`<div>To ${w.to}: ${w.msg}</div><div class="small">${new Date(w.date).toLocaleString()}</div>`;
+    recentDiv.appendChild(li);
+  });
+}
+
+function updateUpcoming(){
+  const list = document.getElementById('upcomingList');
+  list.innerHTML='';
+  const alumni = DB.get('alumni')||[];
+  const days = parseInt(document.getElementById('upcomingWindow').value);
+  const today = new Date();
+  const end = new Date();
+  end.setDate(today.getDate()+days);
+  alumni.filter(a=>a.approved && a.email!==currentUser.email).forEach(a=>{
+    const bday = new Date(a.dob);
+    bday.setFullYear(today.getFullYear());
+    if(bday>=today && bday<=end){
+      const li = document.createElement('div');
+      li.className='list-item';
+      li.textContent=`${a.fullname} - ${bday.toDateString()}`;
+      list.appendChild(li);
+    }
+  });
+}
+document.getElementById('upcomingWindow').addEventListener('change', updateUpcoming);
+
+/* ---------- Send wish ---------- */
+document.getElementById('sendWishBtn').addEventListener('click', ()=>{
+  const recipient = document.getElementById('wishRecipient').value;
+  const msg = document.getElementById('wishMessage').value.trim();
+  if(!recipient||!msg){ alert("Choose recipient and message"); return; }
+  const alumni = DB.get('alumni')||[];
+  const meIdx = alumni.findIndex(a=>a.email===currentUser.email);
+  if(meIdx!==-1){
+    alumni[meIdx].wishes.push({to:recipient,msg:msg,date:new Date()});
+    DB.set('alumni',alumni);
+  }
+  alert("Wish sent!");
+  addNotification("Wish sent to "+recipient);
+  updateRecentWishes();
+  refreshStats();
+});
+document.getElementById('clearWish').addEventListener('click', ()=>{
+  document.getElementById('wishMessage').value='';
+  document.getElementById('wishTemplate').value='';
+});
+
+/* ---------- Notifications ---------- */
+function addNotification(msg){
+  const notifBox = document.createElement('div');
+  notifBox.className='list-item';
+  notifBox.textContent = msg;
+  document.getElementById('notifList').appendChild(notifBox);
+}
+document.getElementById('clearNotifs').addEventListener('click', ()=>{
+  document.getElementById('notifList').innerHTML='';
+});
+function resetNotifications(){
+  document.getElementById('notifList').innerHTML='';
+}
+
+/* ---------- Reminders every 6h ---------- */
+let reminderInterval = setInterval(checkReminders, 21600000); // 6h
+function checkReminders(){
+  if(!currentUser) return;
+  const alumni = DB.get('alumni')||[];
+  const today = new Date();
+  alumni.filter(a=>a.approved && a.email!==currentUser.email).forEach(a=>{
+    const bday = new Date(a.dob);
+    bday.setFullYear(today.getFullYear());
+    const diff = (bday - today)/(1000*60*60*24);
+    if(diff>=0 && diff<1){
+      addNotification("Today is "+a.fullname+"'s birthday!");
+      alert("Reminder: Wish "+a.fullname+"!");
+    }
+  });
+}
+document.getElementById('applyInterval').addEventListener('click', ()=>{
+  const val = parseInt(document.getElementById('intervalSelect').value);
+  clearInterval(reminderInterval);
+  reminderInterval = setInterval(checkReminders, val);
+  alert("Reminder interval updated!");
+});
+
+/* ---------- Stats ---------- */
+function refreshStats(){
+  const alumni = DB.get('alumni')||[];
+  document.getElementById('statTotal').textContent = alumni.length;
+  document.getElementById('statApproved').textContent = alumni.filter(a=>a.approved).length + " approved";
+  document.getElementById('statPending').textContent = alumni.filter(a=>!a.approved).length;
+}
+
+/* ---------- Init ---------- */
+renderAuth();
+refreshStats();
+</script>
+</body>
+</html>
